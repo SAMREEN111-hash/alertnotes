@@ -1,0 +1,34 @@
+version: "3.9"
+
+services:
+  alertnotes:
+    build: .
+    container_name: alertnotes
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - alertnotes_data:/data
+    environment:
+      # Required: Slack bot token (xoxb-...)
+      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN:-}
+      # Required: Channel where alerts are posted (e.g. #incidents)
+      - SLACK_ALERTS_CHANNEL=${SLACK_ALERTS_CHANNEL:-}
+      # Optional: Channel to pull context messages from (often same as above)
+      - SLACK_INCIDENT_CHANNEL=${SLACK_INCIDENT_CHANNEL:-}
+      # Optional: GitHub token for commit context
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      # Optional: GitHub repo for commit lookup (e.g. myorg/myrepo)
+      - GITHUB_REPO=${GITHUB_REPO:-}
+      # Public URL of this AlertNotes instance (for links in Slack)
+      - ALERTNOTES_BASE_URL=${ALERTNOTES_BASE_URL:-http://localhost:8000}
+      - ALERTNOTES_DB_PATH=/data/alertnotes.db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/stats"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  alertnotes_data:
+    driver: local
